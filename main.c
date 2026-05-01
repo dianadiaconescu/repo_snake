@@ -3,7 +3,7 @@
 #include <assert.h>
 #include <stddef.h>
 #include <time.h>
-#define D 3//Dimensions of the grid
+#define D 10//Dimensions of the grid
 typedef struct{
     int x;
     int y;
