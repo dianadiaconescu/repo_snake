@@ -1,7 +1,9 @@
-//ai ramas la minutul 30
+
 #include "raylib.h"
 #include <assert.h>
-#define D 10//Dimensions of the grid
+#include <stddef.h>
+#include <time.h>
+#define D 3//Dimensions of the grid
 typedef struct{
     int x;
     int y;
@@ -36,7 +38,7 @@ static inline Point point_plus_direction(Point p,Grid_Type t)
         case Grid_Empty:
         case Grid_Food:
         default:
-            assert(false);//This should never happen, as the snake should only move in one of the four directions
+            return p;//This should never happen, as the snake should only move in one of the four directions
             break;
         
     }
@@ -45,8 +47,43 @@ static inline Point point_plus_direction(Point p,Grid_Type t)
 typedef enum{
     Scene_Menu=0,
     Scene_Game,
+    Scene_Win,
+    Scene_Lost
 }Scene;
 
+static inline void place_food( Grid_Type grid[D][D], const int snake_size)
+{   
+    Point p;
+    if(D*D/2 < snake_size)//snake e foarte mare, e ineficient a ghicesti o pozitie pentru mancare
+    {
+        Point points[D*D];
+        int len=0;
+        for(size_t y=0;y<D;++y){
+            for(size_t x=0; x<D; ++x)
+            {
+                if(grid[y][x]=Grid_Empty){
+                    points[len].x=x;
+                    points[len].y=y;
+                    ++len;
+                }
+            }
+        }
+        p=points[GetRandomValue(0,len-1)];
+    }
+    else//practic pune random mancarea
+    {
+        
+        do{
+            p.x= GetRandomValue(0,D-1);
+            p.y= GetRandomValue(0,D-1);
+            
+        }while(grid[p.y][p.x]!=Grid_Empty);
+        
+    }
+    grid[p.y][p.x]=Grid_Food;
+    
+    
+} 
 int main(void)
 {
     const int screenWidth = 800;
@@ -71,6 +108,8 @@ int main(void)
 
     SetTargetFPS(60);
 
+    SetRandomSeed(time(NULL));
+
     while (!WindowShouldClose())
     {
         ++frame_count;
@@ -89,8 +128,17 @@ int main(void)
                         snake_tail=snake_head;
                         snake_direction=Grid_North;
 
+                        for(size_t y=0;y<D;++y)
+                        {
+                            for(size_t x=0;x<D;++x)
+                            {
+                                grid[y][x]=Grid_Empty;
+                            }
+                        }
+
                         grid[snake_head.y][snake_head.x]=snake_direction;
-                        grid[6][1]=Grid_Food;
+                        place_food(grid, snake_size);
+                        
 
                         frame_count=1;//Reset the frame count when starting the game, so that the instructions toggle in the menu doesn't affect the game
                    }
@@ -106,33 +154,100 @@ int main(void)
                     {
                         current_scene = Scene_Menu;
                     }
-                    if((IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)) && snake_direction!=Grid_South)
+                    if((IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)) && grid[snake_head.y][snake_head.x]!=Grid_South)
                     {
                         ///Q:e bine sa exista "a collision with the self?"-aici nu exista ---> nu poate deveni ---<
                         snake_direction=Grid_North;
                     }
-                    else if((IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)) && snake_direction!=Grid_North)
+                    else if((IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)) && grid[snake_head.y][snake_head.x]!=Grid_North)
                     {
                         snake_direction=Grid_South;
                     }
-                    else if((IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D)) && snake_direction!=Grid_West)
+                    else if((IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D)) && grid[snake_head.y][snake_head.x]!=Grid_West)
                     {
                         snake_direction=Grid_East;
                     }
-                    else if((IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A)) && snake_direction!=Grid_East)
+                    else if((IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A)) && grid[snake_head.y][snake_head.x]!=Grid_East)
                     {
                         snake_direction=Grid_West;
                     }
                     if(frame_count % 30 == 0)
-                    {
+                    {   //ii plimba capul
                         grid[snake_head.y][snake_head.x]=snake_direction;//Update the grid with the new direction of the snake head
                         snake_head=point_plus_direction(snake_head, snake_direction);//Move the snake head in the direction it's moving
-                        grid[snake_head.y][snake_head.x]=snake_direction;//Update the grid with the new position of the snake head
+                        
+                        if(snake_head.x<0 || snake_head.x >=D || snake_head.y < 0 || snake_head.y >= D)
+                        {
+                            current_scene=Scene_Lost;
+                            frame_count=1;
+                        }
+                        else
+                        {
+                            switch(grid[snake_head.y][snake_head.x])
+                            {
+
+                            case Grid_Food:
+                            {
+                                ++snake_size;
+                                //cand daam de mancare nu se goleste patratul de coada, aparent snakeul creste
+                                if(snake_size==D*D)
+                                {
+                                    current_scene=Scene_Win;
+                                    frame_count=1;
+                                }
+                                else{
+                                    place_food(grid, snake_size);
+                                }
+                                
+
+
+                            break;
+                            }
+                            case Grid_North:
+                            case Grid_East:
+                            case Grid_South:
+                            case Grid_West:
+                            {
+                                current_scene=Scene_Lost;
+                                frame_count=1;
+                                break;
+                            }
+                            ////
+                            
+                            //dc nu e nimic acolo nu ne pasa 
+                            case Grid_Empty:{
+                                //ii trage coada dupa el
+                                Grid_Type temp_dir=grid[snake_tail.y][snake_tail.x];//Get the direction of the snake tail, which is the direction of the next cell in the snake body
+                                grid[snake_tail.y][snake_tail.x]=Grid_Empty;//Clear the cell of the snake tail, as it will move forward
+                                snake_tail=point_plus_direction(snake_tail, temp_dir);//Move the snake tail in the direction of the next cell in the snake body
                     
-                        //Grid_Type temp_dir=grid[snake_tail.y][snake_tail.x];//Get the direction of the snake tail, which is the direction of the next cell in the snake body
-                        //grid[snake_tail.y][snake_tail.x]=Grid_Empty;//Clear the cell of the snake tail, as it will move forward
-                        //snake_tail=point_plus_direction(snake_tail, temp_dir);//Move the snake tail in the direction of the next cell in the snake body
+                            }
+                            default:
+                            break;
+                            }
+                            grid[snake_head.y][snake_head.x]=snake_direction;
+
+                        }
+
+
+
+
+
+                        
+                        }
+                    break;
+                }
+                case Scene_Lost:
+                case Scene_Win:
+                {
+                    if(frame_count%90==0)
+                    {
+                        current_scene=Scene_Menu;
                     }
+                    break;
+                }
+                
+                {
                     break;
                 }
                 default:
@@ -140,6 +255,7 @@ int main(void)
             } 
         ////////////////////////////////////////////////////////////////////////
         ////Render the game 
+
         BeginDrawing();
         ClearBackground(BLACK);
         switch(current_scene)
@@ -191,6 +307,22 @@ int main(void)
                  
                 }
                 
+                break;
+            }
+            case Scene_Lost:
+            {
+                const char* title = "You Lost :(";
+                const int t_size = 40;
+                const int t_w=MeasureText(title, t_size);
+                DrawText(title, (screenWidth - t_w) / 2, screenHeight/4, t_size, RED);
+                break;
+            }
+            case Scene_Win:
+            {
+                const char* title = "You Won!!!";
+                const int t_size = 40;
+                const int t_w=MeasureText(title, t_size);
+                DrawText(title, (screenWidth - t_w) / 2, screenHeight/4, t_size, GREEN);
                 break;
             }
             default:
