@@ -296,7 +296,9 @@ int main(void)
                     }        
                     ///////////////////////////////////////////////////////////////////   
                     if(frame_count % 30 == 0)
-                    {   //ii plimba capul
+                    {   
+                        
+                        //ii plimba capul
                         grid[snake_head.y][snake_head.x]=snake_direction;//Update the grid with the new direction of the snake head
                         snake_head=point_plus_direction(snake_head, snake_direction);//Move the snake head in the direction it's moving
                          // 1. muți capul la al doilea
@@ -371,7 +373,7 @@ int main(void)
                                 case Grid2_West:
                                 {
                                     //if(snake_e)
-                                grow_counter_1 = snake2_size;
+                                grow_counter_1 += snake2_size;
                                 if(snake_size==D*D)
                                     {
                                         current_scene=Scene_Win;
@@ -459,7 +461,7 @@ int main(void)
                                     case Grid_East:
                                     case Grid_West:
                                     {
-                                        grow_counter_2 = snake_size;
+                                        grow_counter_2 += snake_size;
                                         /*if(snake2_size==D*D)
                                             {
                                                 current_scene=Scene_Win;
