@@ -62,6 +62,8 @@ typedef enum{
     Scene_Game,
     Scene_Win,
     Scene_Lost,
+    Scene_Lost2,
+    Scene_Win2,
     Scene_Draw
 }Scene;
 
@@ -102,9 +104,63 @@ static inline void place_food( Grid_Type grid[D][D], const int snake_size)
     grid[p.y][p.x]=Grid_Food;
    
 } 
+void DrawEndScreen(const char* title, const char* result, Color col, int frame_count)
+{
+    ClearBackground((Color){10,10,15,255});
+
+    // grid subtil
+    for(int i=0;i<800;i+=40)
+        DrawLine(i,0,i,800,(Color){40,40,60,80});
+    for(int i=0;i<800;i+=40)
+        DrawLine(0,i,800,i,(Color){40,40,60,80});
+
+    // titlu (SNAKE 1 / 2)
+    int tsize = 40;
+    int tw = MeasureText(title, tsize);
+    DrawText(title, (800 - tw)/2, 80, tsize, col);
+
+    // rezultat (YOU WON / LOST)
+    int msize = 80;
+    int mw = MeasureText(result, msize);
+
+    // glow
+    DrawText(result, (800-mw)/2 - 3, 160, msize, (Color){col.r,col.g,col.b,80});
+    DrawText(result, (800-mw)/2 + 3, 160, msize, (Color){col.r,col.g,col.b,80});
+    DrawText(result, (800-mw)/2, 160, msize, col);
+
+    // mascotă
+    int mx = 400;
+    int my = 320;
+
+    int wave = (frame_count % 30 < 15) ? 10 : -10;
+
+    DrawRectangle(mx-60, my, 20,20,col);
+    DrawRectangle(mx-40, my+wave,20,20,col);
+    DrawRectangle(mx-20, my,20,20,col);
+    DrawRectangle(mx, my+wave,20,20,col);
+    DrawRectangle(mx+20, my,20,20,col);
+
+    // cap
+    DrawRectangle(mx+40, my,30,30,col);
+
+    if(result[4] == 'W') // WON
+    {
+        DrawRectangle(mx+50, my+10,5,5,BLACK);
+        DrawRectangle(mx+60, my+10,5,5,BLACK);
+    }
+    else // LOST (ochi X)
+    {
+        DrawText("X", mx+50, my+8, 20, BLACK);
+        DrawText("X", mx+62, my+8, 20, BLACK);
+    }
+}
 int main(void)
 {
-    
+    //pt personaj
+    float mascot_offset = 0.0f;
+    float mascot_dir = 1.0f;
+    int tongue_anim = 0;
+
     bool snake2_eats_snake=0,snake_eats_snake2=0;
 
     int grow_counter_1=0;
@@ -258,11 +314,11 @@ int main(void)
                         if(grid[next1.y][next1.x] >= Grid2_North && grid[next1.y][next1.x] <= Grid2_West)
                         {
                             snake_eats_snake2=1;
-                            snake2_eats_snake=0;
+                            
                         }
-                        if(grid[next2.y][next2.x] >= Grid_North && grid[next2.y][next2.x] <= Grid_West)
+                        else if(grid[next2.y][next2.x] >= Grid_North && grid[next2.y][next2.x] <= Grid_West)
                         {
-                            snake_eats_snake2=0;
+                            
                             snake2_eats_snake=1;
                         }
                         //////////////////
@@ -281,6 +337,7 @@ int main(void)
                                 case Grid_Food:
                                 {
                                     ++snake_size;
+                                   
                                     //cand daam de mancare nu se goleste patratul de coada, aparent snakeul creste
                                     if(snake_size==D*D)
                                     {
@@ -314,7 +371,7 @@ int main(void)
                                 case Grid2_West:
                                 {
                                     //if(snake_e)
-                                grow_counter_1 += snake2_size;
+                                grow_counter_1 = snake2_size;
                                 if(snake_size==D*D)
                                     {
                                         current_scene=Scene_Win;
@@ -372,7 +429,7 @@ int main(void)
                             // 2. verificare perete
                             if(snake2_head.x < 0 || snake2_head.x >= D || snake2_head.y < 0 || snake2_head.y >= D)
                             {
-                                current_scene = Scene_Lost;
+                                current_scene = Scene_Lost2;
                                 frame_count = 1;
                             }
                             else
@@ -385,7 +442,7 @@ int main(void)
 
                                         if(snake2_size == D*D)
                                         {
-                                            current_scene = Scene_Win;
+                                            current_scene = Scene_Win2;
                                             frame_count = 1;
                                         }
                                         else
@@ -402,7 +459,7 @@ int main(void)
                                     case Grid_East:
                                     case Grid_West:
                                     {
-                                        grow_counter_2 += snake_size;
+                                        grow_counter_2 = snake_size;
                                         /*if(snake2_size==D*D)
                                             {
                                                 current_scene=Scene_Win;
@@ -435,7 +492,7 @@ int main(void)
                                     case Grid2_East:
                                     case Grid2_West:
                                     {
-                                        current_scene = Scene_Lost;
+                                        current_scene = Scene_Lost2;
                                         frame_count = 1;
                                         break;
                                     }
@@ -486,6 +543,8 @@ int main(void)
                 }
                 case Scene_Lost:
                 case Scene_Win:
+                case Scene_Lost2:
+                case Scene_Win2:
                 case Scene_Draw:
                 {
                     if(frame_count%90==0)
@@ -510,20 +569,100 @@ int main(void)
         {
             case Scene_Menu:
             {
+               
+               ClearBackground((Color){10, 10, 15, 255});
+
+                //  GRID subtil (arcade vibe)
+                for(int i = 0; i < screenWidth; i += 40)
+                    DrawLine(i, 0, i, screenHeight, (Color){40, 40, 60, 100});
+
+                for(int i = 0; i < screenHeight; i += 40)
+                    DrawLine(0, i, screenWidth, i, (Color){40, 40, 60, 100});
+
+                //  TITLU (glow)
                 const char* title = "SNAKE";
-                const int t_size = 40;
-                const int t_w=MeasureText(title, t_size);
-                DrawText(title, (screenWidth - t_w) / 2, screenHeight/4, t_size, WHITE);
+                int fontSize = 80;
+                int w = MeasureText(title, fontSize);
+
+                int mx = screenWidth/2 + (int)mascot_offset;
+                int my = screenHeight/2 + 60;
+
+                //  HEAD (cu puls ușor)
+                int pulse = (frame_count % 40 < 20) ? 2 : 0;
+                DrawRectangle(mx - 20 - pulse, my - pulse, 40 + pulse*2, 40 + pulse*2, YELLOW);
+
+                //  ochi (clipesc)
+                if(frame_count % 80 < 70)
+                {
+                    DrawRectangle(mx - 10, my + 10, 6, 6, BLACK);
+                    DrawRectangle(mx + 4, my + 10, 6, 6, BLACK);
+                }
+                else
+                {
+                    DrawRectangle(mx - 10, my + 14, 6, 2, BLACK);
+                    DrawRectangle(mx + 4, my + 14, 6, 2, BLACK);
+                }
+
+                //  limbă animată
+                if(tongue_anim)
+                {
+                    DrawRectangle(mx - 2, my + 40, 4, 12, RED);
+                    DrawRectangle(mx - 6, my + 52, 4, 4, RED);
+                    DrawRectangle(mx + 2, my + 52, 4, 4, RED);
+                }
+
+                // corp (se mișcă ușor)
+                int wave = (frame_count % 30 < 15) ? 5 : -5;
+
+                DrawRectangle(mx - 20, my + 40, 20, 20, YELLOW);
+                DrawRectangle(mx - 40, my + 40 + wave, 20, 20, YELLOW);
+                DrawRectangle(mx - 40, my + 60 + wave, 20, 20, YELLOW);
                 
+                 // text principal
+                DrawText(title, (screenWidth - w)/2, screenHeight/4, fontSize, RED);
+
+                // PRESS ENTER (clipire)
                 if(show_menu_instructions)
                 {
-                    const char* instructions = "Press 'space' to play";
-                    const int i_size = 30;
-                    const int i_w=MeasureText(instructions, i_size);
-                
-                    DrawText(instructions, (screenWidth - i_w) / 2, screenHeight/2, i_size, WHITE);
+                    const char* msg = ">> PRESS ENTER TO PLAY <<";
+                    int size = 30;
+                    int mw = MeasureText(msg, size);
+
+                    DrawText(msg, (screenWidth - mw)/2, screenHeight/2, size, YELLOW);
                 }
+
+                // snake decorativ stânga
+                DrawRectangle(100, screenHeight/2, 20, 20, RED);
+                DrawRectangle(120, screenHeight/2, 20, 20, RED);
+                DrawRectangle(140, screenHeight/2, 20, 20, RED);
+                DrawRectangle(140, screenHeight/2 + 20, 20, 20, RED);
+                DrawRectangle(140, screenHeight/2 + 40, 20, 20, RED);
+
+                //  snake decorativ dreapta
+                DrawRectangle(screenWidth - 160, screenHeight/2, 20, 20, YELLOW);
+                DrawRectangle(screenWidth - 180, screenHeight/2, 20, 20, YELLOW);
+                DrawRectangle(screenWidth - 200, screenHeight/2, 20, 20, YELLOW);
+                DrawRectangle(screenWidth - 200, screenHeight/2 + 20, 20, 20, YELLOW);
+                DrawRectangle(screenWidth - 200, screenHeight/2 + 40, 20, 20, YELLOW);
+
+                //  mesaj mic jos
+                const char* tip = "EAT THE ENEMY";
+                int tipSize = 20;
+                int tw = MeasureText(tip, tipSize);
+
+                DrawText(tip, (screenWidth - tw)/2, screenHeight - 40, tipSize, (Color){0, 200, 255, 255});
+                /////////////////
+                // mișcare stânga-dreapta
+                mascot_offset += 0.5f * mascot_dir;
+
+                if(mascot_offset > 20) mascot_dir = -1;
+                if(mascot_offset < -20) mascot_dir = 1;
+
+                // animație limbă
+                if(frame_count % 20 == 0)
+                    tongue_anim = !tongue_anim;
                 break;
+
             }
             case Scene_Game:
             {
@@ -575,19 +714,52 @@ int main(void)
             }
             case Scene_Lost:
             {
-                const char* title = "You Lost :(";
+                DrawEndScreen("SNAKE 1", "YOU LOST!", RED, frame_count);
+                break;
+                /*
+                const char* title = "Snake 1, you Lost :(";
                 const int t_size = 40;
                 const int t_w=MeasureText(title, t_size);
                 DrawText(title, (screenWidth - t_w) / 2, screenHeight/4, t_size, RED);
                 break;
+                */
+            }
+            case Scene_Lost2:
+            {
+                DrawEndScreen("SNAKE 2", "YOU LOST!", YELLOW, frame_count);
+                break;
+                /*
+                const char* title = "Snake 2, you Lost :(";
+                const int t_size = 40;
+                const int t_w=MeasureText(title, t_size);
+                DrawText(title, (screenWidth - t_w) / 2, screenHeight/4, t_size, RED);
+                break;
+                */
             }
             case Scene_Win:
             {
-                const char* title = "You Won!!!";
+                DrawEndScreen("SNAKE 1", "YOU WON!", RED, frame_count);
+                break;
+                /*
+                const char* title = "Snake 1, you Won!!!";
                 const int t_size = 40;
                 const int t_w=MeasureText(title, t_size);
                 DrawText(title, (screenWidth - t_w) / 2, screenHeight/4, t_size, GREEN);
                 break;
+                */
+            }
+            case Scene_Win2:
+            {
+                DrawEndScreen("SNAKE 2", "YOU WON!", YELLOW, frame_count);
+                break;
+
+                /*
+                const char* title = "Snake 2, you Won!!!";
+                const int t_size = 40;
+                const int t_w=MeasureText(title, t_size);
+                DrawText(title, (screenWidth - t_w) / 2, screenHeight/4, t_size, GREEN);
+                break;
+                */
             }
             case Scene_Draw:
             {
