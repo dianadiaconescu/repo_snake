@@ -3,7 +3,10 @@
 #include <assert.h>
 #include <stddef.h>
 #include <time.h>
+#include<stdio.h>
 #define D 15//Dimensions of the grid
+#define PozScorW 20
+#define PozScorH 30
 typedef struct{
     int x;
     int y;
@@ -101,6 +104,9 @@ static inline void place_food( Grid_Type grid[D][D], const int snake_size)
 } 
 int main(void)
 {
+    
+    bool snake2_eats_snake=0,snake_eats_snake2=0;
+
     int grow_counter_1=0;
     int grow_counter_2=0;
 
@@ -248,111 +254,116 @@ int main(void)
                             frame_count=1;
                         }
                         
-                        /*
+                        
                         if(grid[next1.y][next1.x] >= Grid2_North && grid[next1.y][next1.x] <= Grid2_West)
                         {
-                            bool snake_eats_snake2=1, snake2_eats_snake=0;
+                            snake_eats_snake2=1;
+                            snake2_eats_snake=0;
                         }
-                        if(grid[next2.y][next2.x] >= Grid1_North && grid[next2.y][next2.x] <= Grid1_West)
+                        if(grid[next2.y][next2.x] >= Grid_North && grid[next2.y][next2.x] <= Grid_West)
                         {
                             snake_eats_snake2=0;
                             snake2_eats_snake=1;
                         }
-                        */
-                        if(snake_head.x<0 || snake_head.x >=D || snake_head.y < 0 || snake_head.y >= D)
+                        //////////////////
+                        if(!snake2_eats_snake)
                         {
-                            current_scene=Scene_Lost;
-                            frame_count=1;
-                        }
-                        else
-                        {
-                            switch(grid[snake_head.y][snake_head.x])
-                            {
-
-                            case Grid_Food:
-                            {
-                                ++snake_size;
-                                //cand daam de mancare nu se goleste patratul de coada, aparent snakeul creste
-                                if(snake_size==D*D)
-                                {
-                                    current_scene=Scene_Win;
-                                    frame_count=1;
-                                }
-                                else
-                                {
-                                    place_food(grid, snake_size+snake2_size);
-                                }
-                                break;
-                            }
-                            case Grid_North:
-                            case Grid_East:
-                            case Grid_South:
-                            case Grid_West:
+                            if(snake_head.x<0 || snake_head.x >=D || snake_head.y < 0 || snake_head.y >= D)
                             {
                                 current_scene=Scene_Lost;
                                 frame_count=1;
-                                break;
                             }
-                            ////
-                            
-                            //dc nu e nimic acolo nu ne pasa 
-                            
-                            /////////////////////////
-                            //dc e corp de alt snake
-                            case Grid2_North:
-                            case Grid2_South:
-                            case Grid2_East:
-                            case Grid2_West:
+                            else
                             {
-                                //if(snake_e)
-                               grow_counter_1 += snake2_size;
-                               if(snake_size==D*D)
+                                switch(grid[snake_head.y][snake_head.x])
                                 {
-                                    current_scene=Scene_Win;
-                                    frame_count=1;
-                                }
-                                else
+
+                                case Grid_Food:
                                 {
-                                    place_food(grid, snake_size+snake2_size);
-                                }
-                                for(int y = 0; y < D; y++)
-                                {
-                                    for(int x = 0; x < D; x++)
+                                    ++snake_size;
+                                    //cand daam de mancare nu se goleste patratul de coada, aparent snakeul creste
+                                    if(snake_size==D*D)
                                     {
-                                        if(grid[y][x] == Grid2_North ||
-                                        grid[y][x] == Grid2_South ||
-                                        grid[y][x] == Grid2_East ||
-                                        grid[y][x] == Grid2_West)
+                                        current_scene=Scene_Win;
+                                        frame_count=1;
+                                    }
+                                    else
+                                    {
+                                        place_food(grid, snake_size+snake2_size);
+                                    }
+                                    break;
+                                }
+                                case Grid_North:
+                                case Grid_East:
+                                case Grid_South:
+                                case Grid_West:
+                                {
+                                    current_scene=Scene_Lost;
+                                    frame_count=1;
+                                    break;
+                                }
+                                ////
+                                
+                                //dc nu e nimic acolo nu ne pasa 
+                                
+                                /////////////////////////
+                                //dc e corp de alt snake
+                                case Grid2_North:
+                                case Grid2_South:
+                                case Grid2_East:
+                                case Grid2_West:
+                                {
+                                    //if(snake_e)
+                                grow_counter_1 += snake2_size;
+                                if(snake_size==D*D)
+                                    {
+                                        current_scene=Scene_Win;
+                                        frame_count=1;
+                                    }
+                                    else
+                                    {
+                                        place_food(grid, snake_size+snake2_size);
+                                    }
+                                    for(int y = 0; y < D; y++)
+                                    {
+                                        for(int x = 0; x < D; x++)
                                         {
-                                            grid[y][x] = Grid_Empty;
+                                            if(grid[y][x] == Grid2_North ||
+                                            grid[y][x] == Grid2_South ||
+                                            grid[y][x] == Grid2_East ||
+                                            grid[y][x] == Grid2_West)
+                                            {
+                                                grid[y][x] = Grid_Empty;
+                                            }
                                         }
                                     }
-                                }
-                                snake2_size = 0;
-                                snake2_direction=Grid_Empty;
+                                    snake2_size = 0;
+                                    snake2_direction=Grid_Empty;
 
+                                    break;
+                                }
+                                case Grid_Empty:{
+                                    if(grow_counter_1>0){
+                                        grow_counter_1--;
+                                    }
+                                    else
+                                    {
+                                    //ii trage coada dupa el
+                                    Grid_Type temp_dir=grid[snake_tail.y][snake_tail.x];//Get the direction of the snake tail, which is the direction of the next cell in the snake body
+                                    grid[snake_tail.y][snake_tail.x]=Grid_Empty;//Clear the cell of the snake tail, as it will move forward
+                                    snake_tail=point_plus_direction(snake_tail, temp_dir);//Move the snake tail in the direction of the next cell in the snake body
+                                    }
+                                }
+                                default:
                                 break;
-                            }
-                            case Grid_Empty:{
-                                if(grow_counter_1>0){
-                                    grow_counter_1--;
                                 }
-                                else
-                                {
-                                //ii trage coada dupa el
-                                Grid_Type temp_dir=grid[snake_tail.y][snake_tail.x];//Get the direction of the snake tail, which is the direction of the next cell in the snake body
-                                grid[snake_tail.y][snake_tail.x]=Grid_Empty;//Clear the cell of the snake tail, as it will move forward
-                                snake_tail=point_plus_direction(snake_tail, temp_dir);//Move the snake tail in the direction of the next cell in the snake body
-                                }
-                            }
-                            default:
-                            break;
-                            }
-                            grid[snake_head.y][snake_head.x]=snake_direction;
+                                grid[snake_head.y][snake_head.x]=snake_direction;
 
+                            }
                         }
                         
-                        
+                        if(!snake2_eats_snake)
+                        {
                             // ================= SNAKE 2 =================
                             grid[snake2_head.y][snake2_head.x]=snake2_direction;//Update the grid with the new direction of the snake head
                             snake2_head=point_plus_direction(snake2_head, snake2_direction);
@@ -435,6 +446,7 @@ int main(void)
                                         {
                                             grow_counter_2--;
                                         }
+                                        /*
                                         else
                                         {
                                         // 3. mută coada
@@ -443,17 +455,14 @@ int main(void)
                                         {
                                             // fallback – nu miști coada dacă direcția e invalidă
                                         }
+                                        */
                                         else
                                         {
+                                            Grid_Type temp_dir2 = grid[snake2_tail.y][snake2_tail.x];
                                             grid[snake2_tail.y][snake2_tail.x] = Grid_Empty;
                                             snake2_tail = point_plus_direction(snake2_tail, temp_dir2);
                                         }
-                                        /*
-                                        grid[snake2_tail.y][snake2_tail.x] = Grid_Empty;
-                                        snake2_tail = point_plus_direction(snake2_tail, temp_dir2);
-                                        break;
-                                        */
-                                        }
+                                    
                                        break;
                                     }
 
@@ -464,7 +473,7 @@ int main(void)
                                 // 4. marchezi noul cap
                                 grid[snake2_head.y][snake2_head.x] = snake2_direction;
                             }
-                    
+                        }
                         
 
 
@@ -518,6 +527,15 @@ int main(void)
             }
             case Scene_Game:
             {
+                ////////////////////////////
+                //tine scor
+                //const char* scor_snake[100];
+                //sprintf(scor_snake, " SNAKE 1: %d", snake_size);
+                //const int t_size_scor_1 = 20;
+                //const int t_w_scor_1=MeasureText(scor_snake, t_size_scor_1);
+                //DrawText(scor_snake, (screenWidth - 11 /*t_w_scor_1*/) /8, 0/*screenHeight/10*/, t_size_scor_1, RED);
+                DrawText(TextFormat("Snake 1: %d", snake_size), PozScorW, PozScorH, 30, RED);
+                DrawText(TextFormat("Snake 2: %d", snake2_size), screenWidth/2 +PozScorW, PozScorH, 30, YELLOW);
                 for(int y_i=0;y_i<D;++y_i)
                 {
                     const int y_r=start_d+(y_i*grid_d);
