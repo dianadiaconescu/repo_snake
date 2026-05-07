@@ -253,47 +253,52 @@ int main(void)
                     break;
                 }
                 case Scene_Game:
-                {
+                { 
                     if(IsKeyPressed(KEY_Q))
                     {
                         current_scene = Scene_Menu;
                     }
-                    if(IsKeyPressed(KEY_UP)  && grid[snake_head.y][snake_head.x]!=Grid_South)
+                    if(!snake2_eats_snake)
                     {
-                        
-                        snake_direction=Grid_North;
-                    }
-                    else if(IsKeyPressed(KEY_DOWN) && grid[snake_head.y][snake_head.x]!=Grid_North)
-                    {
-                        snake_direction=Grid_South;
-                    }
-                    else if(IsKeyPressed(KEY_RIGHT)  && grid[snake_head.y][snake_head.x]!=Grid_West)
-                    {
-                        snake_direction=Grid_East;
-                    }
-                    else if(IsKeyPressed(KEY_LEFT) && grid[snake_head.y][snake_head.x]!=Grid_East)
-                    {
-                        snake_direction=Grid_West;
+                        if(IsKeyPressed(KEY_UP)  && grid[snake_head.y][snake_head.x]!=Grid_South)
+                        {
+                            
+                            snake_direction=Grid_North;
+                        }
+                        else if(IsKeyPressed(KEY_DOWN) && grid[snake_head.y][snake_head.x]!=Grid_North)
+                        {
+                            snake_direction=Grid_South;
+                        }
+                        else if(IsKeyPressed(KEY_RIGHT)  && grid[snake_head.y][snake_head.x]!=Grid_West)
+                        {
+                            snake_direction=Grid_East;
+                        }
+                        else if(IsKeyPressed(KEY_LEFT) && grid[snake_head.y][snake_head.x]!=Grid_East)
+                        {
+                            snake_direction=Grid_West;
+                        }
                     }
                     /////////////////////////////////////////////////////////////////////
                     //////controale pt snake 2
-                    
-                    if(IsKeyPressed(KEY_W) && grid[snake2_head.y][snake2_head.x]!=Grid2_South)
+                    if(!snake_eats_snake2)
                     {
-                        snake2_direction=Grid2_North;
-                    }
-                    else if(IsKeyPressed(KEY_S) && grid[snake2_head.y][snake2_head.x]!=Grid2_North)
-                    {
-                        snake2_direction=Grid2_South;
-                    }
-                    else if(IsKeyPressed(KEY_D) && grid[snake2_head.y][snake2_head.x]!=Grid2_West)
-                    {
-                        snake2_direction=Grid2_East;
-                    }
-                    else if(IsKeyPressed(KEY_A) && grid[snake2_head.y][snake2_head.x]!=Grid2_East)
-                    {
-                        snake2_direction=Grid2_West;
-                    }        
+                        if(IsKeyPressed(KEY_W) && grid[snake2_head.y][snake2_head.x]!=Grid2_South)
+                        {
+                            snake2_direction=Grid2_North;
+                        }
+                        else if(IsKeyPressed(KEY_S) && grid[snake2_head.y][snake2_head.x]!=Grid2_North)
+                        {
+                            snake2_direction=Grid2_South;
+                        }
+                        else if(IsKeyPressed(KEY_D) && grid[snake2_head.y][snake2_head.x]!=Grid2_West)
+                        {
+                            snake2_direction=Grid2_East;
+                        }
+                        else if(IsKeyPressed(KEY_A) && grid[snake2_head.y][snake2_head.x]!=Grid2_East)
+                        {
+                            snake2_direction=Grid2_West;
+                        } 
+                    }       
                     ///////////////////////////////////////////////////////////////////   
                     if(frame_count % 30 == 0)
                     {   
@@ -339,6 +344,7 @@ int main(void)
                                 case Grid_Food:
                                 {
                                     ++snake_size;
+
                                    
                                     //cand daam de mancare nu se goleste patratul de coada, aparent snakeul creste
                                     if(snake_size==D*D)
